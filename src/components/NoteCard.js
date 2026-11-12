@@ -1,0 +1,4 @@
+import React from 'react';
+import {Text,TouchableOpacity,View} from 'react-native';
+import {styles,colors} from '../theme/styles';
+export default function NoteCard({note,onPress}){return <TouchableOpacity style={styles.card} onPress={onPress}><View style={styles.row}><Text style={[styles.title,{flex:1}]}>{note.title}</Text><Text style={{fontSize:20,color:'#F59E0B'}}>{note.favorite?'★':'☆'}</Text></View><Text style={styles.text}>{note.module}  •  {note.category}</Text><Text style={[styles.text,{color:note.priority==='High Importance'?colors.danger:colors.muted}]}>{note.priority}</Text><Text numberOfLines={2} style={styles.text}>{note.content.replace(/[#*`]/g,'')}</Text></TouchableOpacity>}
