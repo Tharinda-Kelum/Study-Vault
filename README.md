@@ -12,14 +12,27 @@ React Native + Expo + SQLite individual academic project. Fully offline after in
 
 ## Main Screens
 
+For browser development, run `npm run web`. The Metro configuration bundles
+SQLite's WebAssembly asset and sets the cross-origin isolation headers required
+by `SharedArrayBuffer`. Restart Metro after changing this configuration.
+When hosting an exported web build, configure the hosting server to send
+`Cross-Origin-Embedder-Policy: credentialless` and
+`Cross-Origin-Opener-Policy: same-origin` on responses as well.
+
 - Home: note counts, modules, favorites, revision progress
 - Directory: keyword search across title, content, module, tags and category
 - Filters: module, note category and priority
 - Detail: read note content, favorite, edit, delete
 - Revision: completion checklist, reflection notes, progress bar
-- NoteForm: add/edit note, validation and local persistence
+- NoteForm: add/edit notes, attach multiple files, optional description and local persistence
 
 ## Database
+
+File attachments are saved with each note in SQLite and remain available after
+restarting the app. Add PDFs, slides, documents or images with **Add Files**
+(20 MB maximum per file). A note needs a title, module and either an attachment
+or description. Edit a note to add or remove files. Tap an attachment in the
+detail screen to download it on web or open the share sheet on Android/iOS.
 
 `expo-sqlite` stores notes and revision records in `studyvault.db` on device. On first launch, the app seeds five sample notes for IT3133, IT3162, IT3152 and IT3142. All subsequent changes persist across restarts. No remote services are called.
 
