@@ -28,11 +28,17 @@ When hosting an exported web build, configure the hosting server to send
 
 ## Database
 
-File attachments are saved with each note in SQLite and remain available after
+File attachments are saved with each note and remain available after
 restarting the app. Add PDFs, slides, documents or images with **Add Files**
 (20 MB maximum per file). A note needs a title, module and either an attachment
 or description. Edit a note to add or remove files. Tap an attachment in the
 detail screen to download it on web or open the share sheet on Android/iOS.
+
+The browser version uses IndexedDB for notes, attachments and revisions, avoiding
+SQLite's experimental WebAssembly filesystem. Android and iOS use SQLite.
+Existing browser SQLite databases are left untouched; their records are not
+automatically imported into IndexedDB. Browser data is specific to the site's
+origin and browser profile.
 
 `expo-sqlite` stores notes and revision records in `studyvault.db` on device. On first launch, the app seeds five sample notes for IT3133, IT3162, IT3152 and IT3142. All subsequent changes persist across restarts. No remote services are called.
 
