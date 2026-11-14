@@ -50,4 +50,16 @@ test('browser storage retries, persists attachments across reloads, and preserve
   assert.deepEqual(await reloadedStore.readVault(), { notes: [], revisions: [] });
   await assert.rejects(reloadedStore.saveBrowserRevision(id, true, 'Deleted note'));
   assert.deepEqual(await loadStore().readVault(), { notes: [], revisions: [] });
+
+  const snippet = { ...note, category: 'Code Snippets', attachments: [],
+    code: 'const value = `hello`;\n  console.log(value);\n', output: 'hello\n' };
+  await store.saveBrowserNote(snippet);
+  const saved = (await loadStore().readVault()).notes[0];
+  assert.equal(saved.code, snippet.code);
+  assert.equal(saved.output, snippet.output);
+  await store.saveBrowserNote({ ...saved, code: 'console.log(2);', output: '2' });
+  const edited = (await loadStore().readVault()).notes[0];
+  assert.equal(edited.code, 'console.log(2);');
+  assert.equal(edited.output, '2');
+  await store.deleteBrowserNote(saved.id);
 });

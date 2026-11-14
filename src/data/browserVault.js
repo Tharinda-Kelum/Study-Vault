@@ -66,7 +66,7 @@ export async function saveBrowserNote(note) {
   await writeVault(['notes'], transaction => {
     const store = transaction.objectStore('notes');
     const values = { title: note.title, module: note.module, category: note.category, priority: note.priority,
-      tags: note.tags || '', content: note.content || '', attachments: note.attachments || [], updated_at: now };
+      code: note.code || '', output: note.output || '', tags: note.tags || '', content: note.content || '', attachments: note.attachments || [], updated_at: now };
     if (note.id) {
       const request = store.get(note.id);
       request.onsuccess = () => {
