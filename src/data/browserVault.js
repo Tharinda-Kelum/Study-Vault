@@ -21,7 +21,7 @@ async function getDatabase() {
   if (!databasePromise) {
     databasePromise = (async () => {
       if (!globalThis.indexedDB) throw new Error('Browser storage is unavailable. Open the app in a regular browser window.');
-      const request = indexedDB.open('studyvault-browser', 2);
+      const request = indexedDB.open('studyvault-browser', 3);
       request.onupgradeneeded = event => {
         const db = request.result;
         if (event.oldVersion < 1) {
@@ -31,6 +31,22 @@ async function getDatabase() {
           for (const note of initialNotes) {
             notes.add({ ...note, attachments: [], created_at: now, updated_at: now });
           }
+        }
+        if (event.oldVersion < 3) {
+          const tasks = db.createObjectStore('revisionTasks', { keyPath: 'id' });
+          const revisions = request.transaction.objectStore('revisions').openCursor();
+          revisions.onsuccess = () => {
+            const cursor = revisions.result;
+            if (!cursor) return;
+            const revision = cursor.value;
+            const note = request.transaction.objectStore('notes').get(revision.note_id);
+            note.onsuccess = () => {
+              if (note.result) tasks.put({ id: `note-${revision.note_id}`, title: note.result.title,
+                module: note.result.module, completed: revision.completed,
+                reflection: revision.reflection, updated_at: revision.updated_at });
+            };
+            cursor.continue();
+          };
         }
         const cursorRequest = request.transaction.objectStore('notes').openCursor();
         cursorRequest.onsuccess = () => {
@@ -52,16 +68,17 @@ async function getDatabase() {
 
 export async function readVault() {
   const db = await getDatabase();
-  const transaction = db.transaction(['notes', 'revisions'], 'readonly');
+  const transaction = db.transaction(['notes', 'revisions', 'revisionTasks'], 'readonly');
   const done = transactionDone(transaction);
-  const [notes, revisions] = await Promise.all([
+  const [notes, revisions, revisionTasks] = await Promise.all([
     requestResult(transaction.objectStore('notes').getAll()),
     requestResult(transaction.objectStore('revisions').getAll()),
+    requestResult(transaction.objectStore('revisionTasks').getAll()),
     done,
   ]);
   notes.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
   revisions.sort((a, b) => b.note_id - a.note_id);
-  return { notes, revisions };
+  return { notes, revisions, revisionTasks };
 }
 
 async function writeVault(stores, mutate) {
@@ -91,9 +108,16 @@ export async function saveBrowserNote(note) {
 }
 
 export async function deleteBrowserNote(id) {
-  await writeVault(['notes', 'revisions'], transaction => {
+  await writeVault(['notes', 'revisions', 'revisionTasks'], transaction => {
     transaction.objectStore('notes').delete(id);
     transaction.objectStore('revisions').delete(id);
+    const request = transaction.objectStore('revisionTasks').openCursor();
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      if (cursor.value.note_id === id) cursor.update({ ...cursor.value, note_id: null });
+      cursor.continue();
+    };
   });
 }
 
@@ -117,4 +141,22 @@ export async function saveBrowserRevision(noteId, completed, reflection) {
         reflection, updated_at: new Date().toISOString() });
     };
   });
+}
+
+export async function saveBrowserRevisionTask(task) {
+  if (!task.title.trim()) throw new Error('Enter a revision task.');
+  await writeVault(['notes', 'revisionTasks'], transaction => {
+    const save = () => transaction.objectStore('revisionTasks').put({ ...task, note_id: task.note_id || null, updated_at: new Date().toISOString() });
+    if (task.note_id) {
+      const request = transaction.objectStore('notes').get(task.note_id);
+      request.onsuccess = () => {
+        if (!request.result) { transaction.abort(); return; }
+        save();
+      };
+    } else save();
+  });
+}
+
+export async function deleteBrowserRevisionTask(id) {
+  await writeVault(['revisionTasks'], transaction => transaction.objectStore('revisionTasks').delete(id));
 }

@@ -47,10 +47,31 @@ test('browser storage retries, persists attachments across reloads, and preserve
   await reloadedStore.saveBrowserNote({ ...notes[0], content: 'Description', attachments: [] });
   assert.deepEqual((await reloadedStore.readVault()).notes[0].attachments, []);
   await reloadedStore.deleteBrowserNote(id);
-  assert.deepEqual(await reloadedStore.readVault(), { notes: [], revisions: [] });
+  assert.deepEqual(await reloadedStore.readVault(), { notes: [], revisions: [], revisionTasks: [] });
   await assert.rejects(reloadedStore.saveBrowserRevision(id, true, 'Deleted note'));
-  assert.deepEqual(await loadStore().readVault(), { notes: [], revisions: [] });
+  assert.deepEqual(await loadStore().readVault(), { notes: [], revisions: [], revisionTasks: [] });
 
+  await store.saveBrowserNote(note);
+  const linkedNoteId=(await store.readVault()).notes[0].id;
+  const task = { note_id:linkedNoteId, id: 'task-test', title: 'Review chapter 3', module: 'IT3133', completed: 0, reflection: '' };
+  await store.saveBrowserRevisionTask(task);
+  assert.equal((await loadStore().readVault()).revisionTasks[0].title, task.title);
+  assert.equal((await loadStore().readVault()).revisionTasks[0].note_id,linkedNoteId);
+  await store.saveBrowserRevisionTask({ ...task, completed: 1 });
+  assert.equal((await loadStore().readVault()).revisionTasks[0].completed, 1);
+  await store.saveBrowserRevisionTask({ ...task, completed: 0 });
+  assert.equal((await loadStore().readVault()).revisionTasks[0].completed, 0);
+  await assert.rejects(store.saveBrowserRevisionTask({ ...task, title: ' ' }), /Enter a revision task/);
+  await store.saveBrowserRevisionTask({...task,note_id:null});
+  assert.equal((await loadStore().readVault()).revisionTasks[0].note_id,null);
+  await store.saveBrowserRevisionTask(task);
+  await store.deleteBrowserNote(linkedNoteId);
+  const detached=(await loadStore().readVault()).revisionTasks[0];
+  assert.equal(detached.note_id,null);
+  assert.equal(detached.title,task.title);
+  await assert.rejects(store.saveBrowserRevisionTask(task));
+  await store.deleteBrowserRevisionTask(task.id);
+  assert.deepEqual((await loadStore().readVault()).revisionTasks, []);
   const snippet = { ...note, category: 'Code Snippets', attachments: [],
     code: 'const value = `hello`;\n  console.log(value);\n', output: 'hello\n' };
   await store.saveBrowserNote(snippet);

@@ -10,12 +10,13 @@ test('SQLite migrates existing notes and saves code/output without changing whit
   const adapter = {
     execAsync: async sql => db.exec(sql),
     getAllAsync: async sql => db.prepare(sql).all(),
-    getFirstAsync: async sql => db.prepare(sql).get(),
+    getFirstAsync: async (sql,args=[]) => db.prepare(sql).get(...args),
     runAsync: async (sql, args) => db.prepare(sql).run(...args), closeAsync: async () => {},
   };
   const setup = source.slice(source.indexOf('let dbPromise'), source.indexOf('export function VaultProvider'));
   const save = source.slice(source.indexOf(' const saveNote='), source.indexOf(' const deleteNote='));
-  const api = new Function('SQLite', 'initialNotes', setup + 'const refresh=async()=>{};' + save + 'return {getDB,saveNote};')({ openDatabaseAsync: async () => adapter }, []);
+  const taskMethods = source.slice(source.indexOf(' const saveRevisionTask='), source.indexOf(' return <Context.Provider'));
+  const api = new Function('SQLite', 'initialNotes', setup + 'const refresh=async()=>{};' + save + taskMethods + 'return {getDB,saveNote,saveRevisionTask,deleteRevisionTask};')({ openDatabaseAsync: async () => adapter }, []);
   try {
     await api.getDB();
     const existing = db.prepare('SELECT * FROM notes WHERE id=1').get();
@@ -32,5 +33,19 @@ test('SQLite migrates existing notes and saves code/output without changing whit
     const edited = db.prepare('SELECT * FROM notes WHERE id=2').get();
     assert.equal(edited.code, 'console.log(2);');
     assert.equal(edited.output, '2');
+    const task={note_id:2,id:'task-test',title:'Study chapter 2',module:'IT3133',completed:0,reflection:''};
+    await api.saveRevisionTask(task);
+    assert.equal(db.prepare('SELECT title FROM revision_tasks').get().title,task.title);
+    assert.equal(db.prepare('SELECT note_id FROM revision_tasks').get().note_id,2);
+    await api.saveRevisionTask({...task,completed:1});
+    assert.equal(db.prepare('SELECT completed FROM revision_tasks').get().completed,1);
+    await api.saveRevisionTask({...task,completed:0});
+    assert.equal(db.prepare('SELECT completed FROM revision_tasks').get().completed,0);
+    await assert.rejects(api.saveRevisionTask({...task,title:' '}),/Enter a revision task/);
+    await api.saveRevisionTask({...task,note_id:null});
+    assert.equal(db.prepare('SELECT note_id FROM revision_tasks').get().note_id,null);
+    await assert.rejects(api.saveRevisionTask({...task,note_id:999}),/no longer exists/);
+    await api.deleteRevisionTask(task.id);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM revision_tasks').get().n,0);
   } finally { db.close(); }
 });

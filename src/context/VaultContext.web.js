@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { readVault, saveBrowserNote, deleteBrowserNote, toggleBrowserFavorite, saveBrowserRevision } from '../data/browserVault';
+import { readVault, saveBrowserNote, deleteBrowserNote, toggleBrowserFavorite, saveBrowserRevision, saveBrowserRevisionTask, deleteBrowserRevisionTask } from '../data/browserVault';
 import { styles } from '../theme/styles';
 
 const Context = createContext(null);
@@ -9,12 +9,14 @@ export const useVault = () => useContext(Context);
 export function VaultProvider({ children }) {
   const [notes, setNotes] = useState([]);
   const [revisions, setRevisions] = useState([]);
+  const [revisionTasks, setRevisionTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const refresh = useCallback(async () => {
     const data = await readVault();
     setNotes(data.notes);
     setRevisions(data.revisions);
+    setRevisionTasks(data.revisionTasks);
   }, []);
 
   const initialize = useCallback(async () => {
@@ -41,5 +43,7 @@ export function VaultProvider({ children }) {
     await refresh();
   };
 
-  return <Context.Provider value={{ notes, revisions, loading, saveNote, deleteNote, toggleFavorite, saveRevision }}>{children}</Context.Provider>;
+  const saveRevisionTask = async task => { await saveBrowserRevisionTask(task); await refresh(); };
+  const deleteRevisionTask = async id => { await deleteBrowserRevisionTask(id); await refresh(); };
+  return <Context.Provider value={{ notes, revisions, revisionTasks, saveRevisionTask, deleteRevisionTask, loading, saveNote, deleteNote, toggleFavorite, saveRevision }}>{children}</Context.Provider>;
 }

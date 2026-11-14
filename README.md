@@ -23,7 +23,7 @@ When hosting an exported web build, configure the hosting server to send
 - Directory: keyword search across title, content, module, tags and category
 - Filters: module, note category and priority
 - Detail: read note content, favorite, edit, delete
-- Revision: completion checklist, reflection notes, progress bar
+- Revision: add revision tasks, tick off completed tasks, filter to-do/completed lists and remove tasks
 - NoteForm: add/edit notes, attach multiple files, optional description and local persistence
 
 ## Database
