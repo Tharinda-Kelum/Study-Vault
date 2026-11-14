@@ -1,1 +1,20 @@
-{"expo":{"name":"StudyVault","slug":"studyvault","version":"1.0.0","orientation":"portrait","userInterfaceStyle":"light","ios":{"supportsTablet":true},"android":{"package":"com.studyvault.offline","edgeToEdgeEnabled":true},"plugins":["expo-sqlite"]}}
+{
+  "expo": {
+    "name": "StudyVault",
+    "slug": "studyvault",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.studyvault.offline",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-notifications"
+    ]
+  }
+}
