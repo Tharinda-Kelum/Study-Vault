@@ -21,15 +21,26 @@ async function getDatabase() {
   if (!databasePromise) {
     databasePromise = (async () => {
       if (!globalThis.indexedDB) throw new Error('Browser storage is unavailable. Open the app in a regular browser window.');
-      const request = indexedDB.open('studyvault-browser', 1);
-      request.onupgradeneeded = () => {
+      const request = indexedDB.open('studyvault-browser', 2);
+      request.onupgradeneeded = event => {
         const db = request.result;
-        const notes = db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
-        db.createObjectStore('revisions', { keyPath: 'note_id' });
-        const now = new Date().toISOString();
-        for (const note of initialNotes) {
-          notes.add({ ...note, attachments: [], created_at: now, updated_at: now });
+        if (event.oldVersion < 1) {
+          const notes = db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
+          db.createObjectStore('revisions', { keyPath: 'note_id' });
+          const now = new Date().toISOString();
+          for (const note of initialNotes) {
+            notes.add({ ...note, attachments: [], created_at: now, updated_at: now });
+          }
         }
+        const cursorRequest = request.transaction.objectStore('notes').openCursor();
+        cursorRequest.onsuccess = () => {
+          const cursor = cursorRequest.result;
+          if (!cursor) return;
+          if (cursor.value.category === 'Exam Formula Sheets') {
+            cursor.update({ ...cursor.value, category: 'Chapter Short Note' });
+          }
+          cursor.continue();
+        };
       };
       const db = await requestResult(request);
       db.onversionchange = () => { db.close(); databasePromise = undefined; };
