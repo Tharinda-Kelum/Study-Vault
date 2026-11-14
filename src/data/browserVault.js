@@ -1,4 +1,5 @@
 import { initialNotes } from './seed';
+import { validateTask } from './study';
 
 let databasePromise;
 
@@ -17,22 +18,27 @@ function transactionDone(transaction) {
   });
 }
 
-async function getDatabase() {
-  if (!databasePromise) {
-    databasePromise = (async () => {
-      if (!globalThis.indexedDB) throw new Error('Browser storage is unavailable. Open the app in a regular browser window.');
-      const request = indexedDB.open('studyvault-browser', 3);
+const DATABASE_NAME = 'studyvault-browser';
+const SCHEMA_VERSION = 4;
+const REQUIRED_STORES = ['notes', 'revisions', 'revisionTasks', 'study'];
+
+async function openDatabase(version) {
+  const request = version === undefined
+    ? indexedDB.open(DATABASE_NAME)
+    : indexedDB.open(DATABASE_NAME, version);
       request.onupgradeneeded = event => {
         const db = request.result;
-        if (event.oldVersion < 1) {
+        if (!db.objectStoreNames.contains('study')) db.createObjectStore('study', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('notes')) {
           const notes = db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
-          db.createObjectStore('revisions', { keyPath: 'note_id' });
+
           const now = new Date().toISOString();
           for (const note of initialNotes) {
             notes.add({ ...note, attachments: [], created_at: now, updated_at: now });
           }
         }
-        if (event.oldVersion < 3) {
+        if (!db.objectStoreNames.contains('revisions')) db.createObjectStore('revisions', { keyPath: 'note_id' });
+        if (!db.objectStoreNames.contains('revisionTasks')) {
           const tasks = db.createObjectStore('revisionTasks', { keyPath: 'id' });
           const revisions = request.transaction.objectStore('revisions').openCursor();
           revisions.onsuccess = () => {
@@ -58,7 +64,32 @@ async function getDatabase() {
           cursor.continue();
         };
       };
-      const db = await requestResult(request);
+
+  return new Promise((resolve, reject) => {
+    let blocked = false;
+    request.onblocked = () => {
+      blocked = true;
+      reject(new Error('Close other StudyVault tabs, then try again to finish updating storage.'));
+    };
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      if (blocked) { request.result.close(); return; }
+      resolve(request.result);
+    };
+  });
+}
+
+async function getDatabase() {
+  if (!databasePromise) {
+    databasePromise = (async () => {
+      if (!globalThis.indexedDB) throw new Error('Browser storage is unavailable. Open the app in a regular browser window.');
+      // Open the stored version first so an older tab never requests a downgrade.
+      let db = await openDatabase();
+      if (db.version < SCHEMA_VERSION || REQUIRED_STORES.some(name => !db.objectStoreNames.contains(name))) {
+        const nextVersion = Math.max(SCHEMA_VERSION, db.version + 1);
+        db.close();
+        db = await openDatabase(nextVersion);
+      }
       db.onversionchange = () => { db.close(); databasePromise = undefined; };
       return db;
     })().catch(error => { databasePromise = undefined; throw error; });
@@ -94,7 +125,7 @@ export async function saveBrowserNote(note) {
   await writeVault(['notes'], transaction => {
     const store = transaction.objectStore('notes');
     const values = { title: note.title, module: note.module, category: note.category, priority: note.priority,
-      code: note.code || '', output: note.output || '', tags: note.tags || '', content: note.content || '', attachments: note.attachments || [], updated_at: now };
+      folder: note.folder || '', chapter: note.chapter || '', code: note.code || '', output: note.output || '', tags: note.tags || '', content: note.content || '', attachments: note.attachments || [], updated_at: now };
     if (note.id) {
       const request = store.get(note.id);
       request.onsuccess = () => {
@@ -108,7 +139,7 @@ export async function saveBrowserNote(note) {
 }
 
 export async function deleteBrowserNote(id) {
-  await writeVault(['notes', 'revisions', 'revisionTasks'], transaction => {
+  await writeVault(['notes', 'revisions', 'revisionTasks', 'study'], transaction => {
     transaction.objectStore('notes').delete(id);
     transaction.objectStore('revisions').delete(id);
     const request = transaction.objectStore('revisionTasks').openCursor();
@@ -117,6 +148,12 @@ export async function deleteBrowserNote(id) {
       if (!cursor) return;
       if (cursor.value.note_id === id) cursor.update({ ...cursor.value, note_id: null });
       cursor.continue();
+    };
+    const study = transaction.objectStore('study');
+    const state = study.get('state');
+    state.onsuccess = () => {
+      if (state.result?.value?.flashcards) study.put({ ...state.result, value: { ...state.result.value,
+        flashcards: state.result.value.flashcards.map(card => card.note_id === id ? { ...card, note_id: null } : card) } });
     };
   });
 }
@@ -144,7 +181,7 @@ export async function saveBrowserRevision(noteId, completed, reflection) {
 }
 
 export async function saveBrowserRevisionTask(task) {
-  if (!task.title.trim()) throw new Error('Enter a revision task.');
+  task = validateTask(task);
   await writeVault(['notes', 'revisionTasks'], transaction => {
     const save = () => transaction.objectStore('revisionTasks').put({ ...task, note_id: task.note_id || null, updated_at: new Date().toISOString() });
     if (task.note_id) {
@@ -159,4 +196,27 @@ export async function saveBrowserRevisionTask(task) {
 
 export async function deleteBrowserRevisionTask(id) {
   await writeVault(['revisionTasks'], transaction => transaction.objectStore('revisionTasks').delete(id));
+}
+
+export async function readBrowserStudyState() {
+  const db = await getDatabase();
+  const transaction = db.transaction('study', 'readonly');
+  const done = transactionDone(transaction);
+  const [row] = await Promise.all([requestResult(transaction.objectStore('study').get('state')), done]);
+  return row?.value;
+}
+
+export async function saveBrowserStudyState(value) {
+  await writeVault(['study'], transaction => transaction.objectStore('study').put({ id: 'state', value }));
+}
+
+export async function restoreBrowserVault(data) {
+  await writeVault(['notes', 'revisionTasks', 'revisions', 'study'], transaction => {
+    for (const name of ['notes', 'revisionTasks', 'revisions']) {
+      const store = transaction.objectStore(name);
+      store.clear();
+      for (const row of data[name]) store.put(row);
+    }
+    transaction.objectStore('study').put({ id: 'state', value: data.studyState });
+  });
 }

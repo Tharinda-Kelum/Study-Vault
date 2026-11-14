@@ -9,7 +9,7 @@ function loadStore() {
   const code = babel.transformSync(fs.readFileSync('src/data/browserVault.js', 'utf8'), {
     configFile: false, babelrc: false, plugins: ['@babel/plugin-transform-modules-commonjs'],
   }).code;
-  new Function('require', 'module', 'exports', code)(() => ({ initialNotes: [] }), module, module.exports);
+  new Function('require', 'module', 'exports', code)(name => name==='./seed'?{initialNotes:[]}:require('./loadSource.cjs')('src/data/study.js'), module, module.exports);
   return module.exports;
 }
 
@@ -61,7 +61,7 @@ test('browser storage retries, persists attachments across reloads, and preserve
   assert.equal((await loadStore().readVault()).revisionTasks[0].completed, 1);
   await store.saveBrowserRevisionTask({ ...task, completed: 0 });
   assert.equal((await loadStore().readVault()).revisionTasks[0].completed, 0);
-  await assert.rejects(store.saveBrowserRevisionTask({ ...task, title: ' ' }), /Enter a revision task/);
+  await assert.rejects(store.saveBrowserRevisionTask({ ...task, title: ' ' }), /Enter a task/);
   await store.saveBrowserRevisionTask({...task,note_id:null});
   assert.equal((await loadStore().readVault()).revisionTasks[0].note_id,null);
   await store.saveBrowserRevisionTask(task);

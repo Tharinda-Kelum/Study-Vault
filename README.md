@@ -1,57 +1,69 @@
-# StudyVault – Offline Academic Note & Lecture Hub
+﻿# StudyVault
 
-React Native + Expo + SQLite individual academic project. Fully offline after initial app installation; no cloud database, public APIs, login, or internet access needed for app features.
+An offline study workspace built with React Native, Expo, and local storage.
 
-## Setup
+## Run
 
-1. Install Node.js LTS and VS Code.
-2. Open this directory in a terminal.
-3. Run `npm install`.
-4. Run `npx expo start`.
-5. Scan the QR code with Expo Go on Android, or launch an emulator. Expo Go and development tooling may require network connectivity during initial setup; the app's data operations do not.
+1. Run `npm install` (this also prepares the bundled PDF viewer).
+2. Run `npx expo start --clear`.
+3. Open the browser with `w`, or use Expo Go on a supported Android/iOS device.
 
-## Main Screens
+Development tooling and the initial installation require a connection. Notes and
+study tools use local data; the PDF viewer bundles its engine without a CDN.
 
-For browser development, run `npm run web`. The Metro configuration bundles
-SQLite's WebAssembly asset and sets the cross-origin isolation headers required
-by `SharedArrayBuffer`. Restart Metro after changing this configuration.
-When hosting an exported web build, configure the hosting server to send
-`Cross-Origin-Embedder-Policy: credentialless` and
-`Cross-Origin-Opener-Policy: same-origin` on responses as well.
+## Features
 
-- Home: note counts, modules, favorites, revision progress
-- Directory: keyword search across title, content, module, tags and category
-- Filters: module, note category and priority
-- Detail: read note content, favorite, edit, delete
-- Revision: add revision tasks, tick off completed tasks, filter to-do/completed lists and remove tasks
-- NoteForm: add/edit notes, attach multiple files, optional description and local persistence
+- **Notes:** create and edit notes, attach files (20 MB per file), add code and
+  output for Code Snippets, organize by module/folder/chapter, search and favorite.
+- **File previews:** preview PDFs with page controls and common image formats
+  inside the app. Other file types can be downloaded or opened with another app.
+- **To Do:** create tasks, link notes, set High/Medium/Low priority, add due dates
+  and reminders, complete/reopen tasks, filter lists, and remove tasks.
+- **Study / Timer:** configurable focus sessions, a five-minute break, pause/resume,
+  and automatic session logging. Timer deadlines survive navigation and reloads.
+  A discarded session is not logged.
+- **Study / Flashcards:** create question-and-answer cards, optionally link a note,
+  filter by module, reveal answers, and record self-assessment.
+- **Study / Calendar:** view task deadlines, add exams, and browse months/days.
+- **Study / Statistics:** view study minutes and completed tasks for the last seven
+  days, reviewed cards, and study time by module.
+- **Settings & backup:** toggle persistent dark mode; export and restore notes,
+  attachments, tasks, flashcards, exams, study sessions, and preferences as JSON.
+  Restore validates the backup and requires confirmation before replacing data.
+  Export the current data first if you want to keep a separate copy.
 
-## Database
+## Reminders
 
-File attachments are saved with each note and remain available after
-restarting the app. Add PDFs, slides, documents or images with **Add Files**
-(20 MB maximum per file). A note needs a title, module and either an attachment
-or description. Edit a note to add or remove files. Tap an attachment in the
-detail screen to download it on web or open the share sheet on Android/iOS.
+Enter a reminder as `YYYY-MM-DD HH:mm` in local device time and select **Enable
+notifications**, then save the task. Due dates use `YYYY-MM-DD`.
 
-The browser version uses IndexedDB for notes, attachments and revisions, avoiding
-SQLite's experimental WebAssembly filesystem. Android and iOS use SQLite.
-Existing browser SQLite databases are left untouched; their records are not
-automatically imported into IndexedDB. Browser data is specific to the site's
-origin and browser profile.
+Browser notifications and in-app reminders require StudyVault to stay open.
+Android/iOS use local scheduled notifications after permission is granted;
+actual delivery depends on device notification settings. No push server is used.
+New notification plugin configuration requires rebuilding an existing custom
+native development/release build. Verify reminder delivery on a physical device.
 
-`expo-sqlite` stores notes and revision records in `studyvault.db` on device. On first launch, the app seeds five sample notes for IT3133, IT3162, IT3152 and IT3142. All subsequent changes persist across restarts. No remote services are called.
+## Storage and migration
 
-## Demo Checklist
+Android/iOS store data in SQLite (`studyvault.db`). The browser uses IndexedDB
+(`studyvault-browser`). Upgrades retain existing data. Deleting a linked note
+clears its links in tasks and flashcards while keeping those study items.
+Browser data belongs to the site's origin and browser profile. Older browser
+SQLite data is left untouched and is not automatically imported into IndexedDB.
 
-1. Start the app and show seeded notes and counts.
-2. Search for `React` and show filtered results.
-3. Filter by `High Importance` and a module.
-4. Open a note, favorite it, and verify the Dashboard.
-5. Add a note, edit it, restart the app and confirm persistence.
-6. Mark a revision complete and save a reflection.
-7. Turn on airplane mode and repeat search, filter and revision operations.
+Backup restores are transactional. Malformed backups are rejected, and a failed
+write rolls back the restore. A backup is a plain JSON file containing your data,
+including attachments; keep it in a trusted location.
 
-## Notes
+## Checks
 
-The detail screen provides lightweight Markdown-like heading and inline marker display, not a full Markdown renderer. Flashcards are represented by a revision/self-assessment log, not spaced-repetition question-answer cards. A true peer-to-peer sharing feature is intentionally excluded because the assignment requires a fully local offline application.
+- `npm test`: storage migrations, tasks, reminders, backup validation and restore.
+- `npx expo export --platform all`: web, Android, and iOS bundle validation.
+- `node scripts/browser-check.cjs`: browser smoke checks against an exported
+  `dist` build using headless Microsoft Edge on Windows. The script uses an
+  isolated test browser profile and localhost port 8090; it never edits the
+  normal app's browser database. Screenshots are written under `.preview`.
+
+The PDF engine is generated from the installed `pdfjs-dist` package with
+`node scripts/prepare-pdf.cjs`. Its Apache-2.0 license is preserved alongside the
+generated modules in `src/generated`.

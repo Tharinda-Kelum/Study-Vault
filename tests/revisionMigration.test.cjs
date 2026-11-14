@@ -22,7 +22,7 @@ test('browser upgrade retains existing revision completion and reflections', asy
   const code = babel.transformSync(fs.readFileSync('src/data/browserVault.js', 'utf8'), {
     configFile: false, babelrc: false, plugins: ['@babel/plugin-transform-modules-commonjs'],
   }).code;
-  new Function('require', 'module', 'exports', code)(() => ({ initialNotes: [] }), module, module.exports);
+  new Function('require', 'module', 'exports', code)(name => name==='./seed'?{initialNotes:[]}:require('./loadSource.cjs')('src/data/study.js'), module, module.exports);
   const data = await module.exports.readVault();
   assert.equal(data.notes[0].category, 'Chapter Short Note');
   assert.deepEqual(data.revisionTasks, [{ id: 'note-7', title: 'Chapter 2', module: 'IT3133',
@@ -35,7 +35,7 @@ test('SQLite migrates old revisions once without recreating removed tasks', asyn
   db.exec(source.match(/execAsync\(`([\s\S]*?)`\)/)[1]);
   db.exec("INSERT INTO notes (title,module,category,priority,content,created_at,updated_at) VALUES ('Chapter 2','IT3133','Chapter Short Note','Normal','Notes','now','now'); INSERT INTO revisions (note_id,completed,reflection,updated_at) VALUES (1,1,'Revise examples','now')");
   const adapter = { execAsync: async sql => db.exec(sql), getAllAsync: async sql => db.prepare(sql).all(),
-    getFirstAsync: async sql => db.prepare(sql).get(), runAsync: async (sql, args) => db.prepare(sql).run(...args), closeAsync: async () => {} };
+    getFirstAsync: async sql => db.prepare(sql).get(), runAsync: async (sql, args=[]) => db.prepare(sql).run(...args), closeAsync: async () => {} };
   const setup = source.slice(source.indexOf('let dbPromise'), source.indexOf('export function VaultProvider'));
   const load = () => new Function('SQLite', 'initialNotes', setup + 'return getDB;')({ openDatabaseAsync: async () => adapter }, [])();
   try {

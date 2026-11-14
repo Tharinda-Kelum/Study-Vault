@@ -1,0 +1,23 @@
+2026-11-13 11:20:22.812: [INFO] CurrentProfilePath: C:\Users\2022ICT01\Desktop\studyvault\.preview-browser\Default
+2026-11-13 11:20:22.812: [INFO] Profiles total count: 1
+2026-11-13 11:20:22.812: [INFO] Profile: name=Profile 1 path=C:\Users\2022ICT01\Desktop\studyvault\.preview-browser\Default lastActive=null
+2026-11-13 11:20:22.812: [INFO] LastUsedProfileDir: C:\Users\2022ICT01\Desktop\studyvault\.preview-browser\Default
+2026-11-13 11:20:22.812: [INFO] VisibilityChanged: 0
+2026-11-13 11:20:22.830: [INFO] OnDoneLoading sync enabled: 0
+2026-11-13 11:20:22.830: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-11-13 11:20:22.830: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-11-13 11:20:22.830: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-11-13 11:20:22.927: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-11-13 11:20:30.375: [INFO] BookmarksSnapshot Shutdown total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-11-13 11:20:55.454: [INFO] CurrentProfilePath: C:\Users\2022ICT01\Desktop\studyvault\.preview-browser\Default
+2026-11-13 11:20:55.454: [INFO] Profiles total count: 1
+2026-11-13 11:20:55.454: [INFO] Profile: name=Profile 1 path=C:\Users\2022ICT01\Desktop\studyvault\.preview-browser\Default lastActive=2026-11-13T11:20:22.818Z
+2026-11-13 11:20:55.455: [INFO] LastUsedProfileDir: C:\Users\2022ICT01\Desktop\studyvault\.preview-browser\Default
+2026-11-13 11:20:55.455: [INFO] MostRecentlyActiveProfile: name=Profile 1 path=C:\Users\2022ICT01\Desktop\studyvault\.preview-browser\Default lastActive=2026-11-13T11:20:22.818Z
+2026-11-13 11:20:55.455: [INFO] VisibilityChanged: 0
+2026-11-13 11:20:55.476: [INFO] OnDoneLoading sync enabled: 0
+2026-11-13 11:20:55.476: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-11-13 11:20:55.476: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-11-13 11:20:55.476: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-11-13 11:20:55.477: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-11-13 11:21:00.712: [INFO] BookmarksSnapshot Shutdown total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1

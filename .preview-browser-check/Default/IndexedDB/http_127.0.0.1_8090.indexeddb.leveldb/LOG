@@ -1,0 +1,14 @@
+2026/11/13-17:19:03.626 4f54 Reusing MANIFEST C:\Users\2022ICT01\Desktop\studyvault\.preview-browser-check\Default\IndexedDB\http_127.0.0.1_8090.indexeddb.leveldb/MANIFEST-000001
+2026/11/13-17:19:03.627 4f54 Recovering log #18
+2026/11/13-17:19:03.627 4f54 Reusing old log C:\Users\2022ICT01\Desktop\studyvault\.preview-browser-check\Default\IndexedDB\http_127.0.0.1_8090.indexeddb.leveldb/000018.log 
+2026/11/13-17:19:03.627 4f54 Delete type=2 #16
+2026/11/13-17:19:03.696 3b3c Level-0 table #23: started
+2026/11/13-17:19:03.700 3b3c Level-0 table #23: 7953 bytes OK
+2026/11/13-17:19:03.703 3b3c Delete type=0 #18
+2026/11/13-17:19:03.703 3b3c Manual compaction at level-0 from '\x00\x06\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x07\x00\x00\x00' @ 0 : 0; will stop at '\x00\x06\x04\x02\x01\x09\x00t\x00e\x00s\x00t\x00-\x00t\x00a\x00s\x00k' @ 1825 : 1
+2026/11/13-17:19:03.703 3b3c Compacting 1@0 + 1@1 files
+2026/11/13-17:19:03.706 3b3c Generated table #24@0: 92 keys, 1153 bytes
+2026/11/13-17:19:03.706 3b3c Compacted 1@0 + 1@1 files => 1153 bytes
+2026/11/13-17:19:03.709 3b3c compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/11/13-17:19:03.709 3b3c Delete type=2 #23
+2026/11/13-17:19:03.710 3b3c Manual compaction at level-0 from '\x00\x06\x04\x02\x01\x09\x00t\x00e\x00s\x00t\x00-\x00t\x00a\x00s\x00k' @ 1825 : 1 .. '\x00\x07\x00\x00\x00' @ 0 : 0; will stop at (end)

@@ -11,12 +11,12 @@ test('SQLite migrates existing notes and saves code/output without changing whit
     execAsync: async sql => db.exec(sql),
     getAllAsync: async sql => db.prepare(sql).all(),
     getFirstAsync: async (sql,args=[]) => db.prepare(sql).get(...args),
-    runAsync: async (sql, args) => db.prepare(sql).run(...args), closeAsync: async () => {},
+    runAsync: async (sql, args=[]) => db.prepare(sql).run(...args), closeAsync: async () => {},
   };
   const setup = source.slice(source.indexOf('let dbPromise'), source.indexOf('export function VaultProvider'));
   const save = source.slice(source.indexOf(' const saveNote='), source.indexOf(' const deleteNote='));
   const taskMethods = source.slice(source.indexOf(' const saveRevisionTask='), source.indexOf(' return <Context.Provider'));
-  const api = new Function('SQLite', 'initialNotes', setup + 'const refresh=async()=>{};' + save + taskMethods + 'return {getDB,saveNote,saveRevisionTask,deleteRevisionTask};')({ openDatabaseAsync: async () => adapter }, []);
+  const api = new Function('SQLite', 'initialNotes', 'validateTask', setup + 'const refresh=async()=>{};' + save + taskMethods + 'return {getDB,saveNote,saveRevisionTask,deleteRevisionTask};')({ openDatabaseAsync: async () => adapter }, [], require('./loadSource.cjs')('src/data/study.js').validateTask);
   try {
     await api.getDB();
     const existing = db.prepare('SELECT * FROM notes WHERE id=1').get();
@@ -41,7 +41,7 @@ test('SQLite migrates existing notes and saves code/output without changing whit
     assert.equal(db.prepare('SELECT completed FROM revision_tasks').get().completed,1);
     await api.saveRevisionTask({...task,completed:0});
     assert.equal(db.prepare('SELECT completed FROM revision_tasks').get().completed,0);
-    await assert.rejects(api.saveRevisionTask({...task,title:' '}),/Enter a revision task/);
+    await assert.rejects(api.saveRevisionTask({...task,title:' '}),/Enter a task/);
     await api.saveRevisionTask({...task,note_id:null});
     assert.equal(db.prepare('SELECT note_id FROM revision_tasks').get().note_id,null);
     await assert.rejects(api.saveRevisionTask({...task,note_id:999}),/no longer exists/);

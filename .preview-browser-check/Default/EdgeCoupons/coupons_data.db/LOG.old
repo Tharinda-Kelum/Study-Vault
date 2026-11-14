@@ -1,0 +1,15 @@
+2026/11/13-17:17:04.413 4bcc Reusing MANIFEST C:\Users\2022ICT01\Desktop\studyvault\.preview-browser-check\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/11/13-17:17:04.413 4bcc Recovering log #16
+2026/11/13-17:17:04.413 4bcc Reusing old log C:\Users\2022ICT01\Desktop\studyvault\.preview-browser-check\Default\EdgeCoupons/coupons_data.db/000016.log 
+2026/11/13-17:17:04.456 295c Level-0 table #20: started
+2026/11/13-17:17:04.462 295c Level-0 table #20: 683376 bytes OK
+2026/11/13-17:17:04.467 295c Delete type=0 #16
+2026/11/13-17:17:04.468 295c Compacting 4@0 + 1@1 files
+2026/11/13-17:17:04.485 295c Generated table #21@0: 3 keys, 683376 bytes
+2026/11/13-17:17:04.485 295c Compacted 4@0 + 1@1 files => 683376 bytes
+2026/11/13-17:17:04.487 295c compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/11/13-17:17:04.488 295c Delete type=2 #8
+2026/11/13-17:17:04.488 295c Delete type=2 #11
+2026/11/13-17:17:04.488 295c Delete type=2 #14
+2026/11/13-17:17:04.488 295c Delete type=2 #17
+2026/11/13-17:17:04.488 295c Delete type=2 #20
