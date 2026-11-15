@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import { File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 export async function pickAttachments() {
@@ -17,7 +18,7 @@ export async function pickAttachments() {
         reader.readAsDataURL(asset.file);
       });
     } else {
-      data = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });
+      data = await new File(asset.uri).base64();
     }
     return { name: asset.name, mimeType: asset.mimeType || 'application/octet-stream', size: asset.size, data };
   }));

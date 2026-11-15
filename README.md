@@ -4,6 +4,8 @@ An offline study workspace built with React Native, Expo, and local storage.
 
 ## Run
 
+Use Node.js 22.13+ (22 LTS) or 24.3+ (24 LTS) and Expo Go compatible with SDK 58.
+
 1. Run `npm install` (this also prepares the bundled PDF viewer).
 2. Run `npx expo start --clear`.
 3. Open the browser with `w`, or use Expo Go on a supported Android/iOS device.
