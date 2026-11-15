@@ -5,7 +5,9 @@ import { File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 export async function pickAttachments() {
-  const result = await DocumentPicker.getDocumentAsync({ multiple: true, copyToCacheDirectory: true, base64: false });
+  // On Android, read the picker-granted content URI immediately. Expo Go
+  // may place picker cache copies outside this project's readable sandbox.
+  const result = await DocumentPicker.getDocumentAsync({ multiple: true, copyToCacheDirectory: Platform.OS !== 'android', base64: false });
   if (result.canceled) return [];
   return Promise.all(result.assets.map(async asset => {
     if (asset.size > 20 * 1024 * 1024) throw new Error('Choose files smaller than 20 MB.');

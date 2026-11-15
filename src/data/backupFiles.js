@@ -21,7 +21,9 @@ export async function exportBackupFile(backup) {
 }
 
 export async function pickBackupFile() {
-  const result = await DocumentPicker.getDocumentAsync({ type: ['application/json', 'text/plain'], copyToCacheDirectory: true, base64: false });
+  // On Android, read the picker-granted content URI immediately. Expo Go
+  // may place picker cache copies outside this project's readable sandbox.
+  const result = await DocumentPicker.getDocumentAsync({ type: ['application/json', 'text/plain'], copyToCacheDirectory: Platform.OS !== 'android', base64: false });
   if (result.canceled) return null;
   const file = result.assets[0];
   try {
